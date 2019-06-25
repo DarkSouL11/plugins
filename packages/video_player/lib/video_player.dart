@@ -129,6 +129,19 @@ class VideoPlayerValue {
 }
 
 enum DataSourceType { asset, network, file }
+class PlaybackType {
+  const PlaybackType._internal(this._value);
+  final String _value;
+
+  static const PlaybackType DASH = PlaybackType._internal('dash');
+  static const PlaybackType HLS = PlaybackType._internal('hls');
+  static const PlaybackType OTHER = PlaybackType._internal('other');
+
+  String get value => _value;
+
+  @override
+  String toString() => 'PlaybackType.$_value';
+}
 
 /// Controls a platform video player, and provides updates when the state is
 /// changing.
@@ -187,7 +200,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   @visibleForTesting
   int get textureId => _textureId;
 
-  Future<void> initialize() async {
+  Future<void> initialize([PlaybackType playbackType]) async {
     _lifeCycleObserver = _VideoAppLifeCycleObserver(this);
     _lifeCycleObserver.initialize();
     _creatingCompleter = Completer<void>();
@@ -205,6 +218,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       case DataSourceType.file:
         dataSourceDescription = <String, dynamic>{'uri': dataSource};
     }
+    dataSourceDescription['playbackType'] = playbackType?.value;
     final Map<String, dynamic> response =
         await _channel.invokeMapMethod<String, dynamic>(
       'create',
